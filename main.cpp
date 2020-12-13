@@ -3,81 +3,76 @@
 #include <fstream>
 #include <cstdlib>
 #include <conio.h>
+#include <vector>
 
 using namespace std;
 
-struct Osoba
+struct Adresat
 {
     int id;
     string imie, nazwisko, numerTelefonu, email, adres;
 };
 
-void wyswietlDaneOsob (Osoba osoby[], int numerOsoby)
+void wyswietlDaneOsob (vector <Adresat> &adresaci, int numerOsoby)
 {
-        cout << osoby[numerOsoby].id << endl;
-        cout << osoby[numerOsoby].imie << endl;
-        cout << osoby[numerOsoby].nazwisko << endl;
-        cout << osoby[numerOsoby].numerTelefonu <<endl;
-        cout << osoby[numerOsoby].email  << endl;
-        cout << osoby[numerOsoby].adres << endl;
+    cout <<  adresaci[numerOsoby].id << "|";
+    cout <<  adresaci[numerOsoby].imie << "|";
+    cout <<  adresaci[numerOsoby].nazwisko << "|";
+    cout <<  adresaci[numerOsoby].numerTelefonu << "|";
+    cout <<  adresaci[numerOsoby].email << "|";
+    cout <<  adresaci[numerOsoby].adres << "|" << endl;
 }
 
-int wczytajOsobyZPLiku(Osoba osoby[])
+string wyodrebnijPierwszyWyraz (string &wyrazDoSkrocenia)
+{
+    string pierwszyWyraz;
+    string przerywnik = "|";
+    int pozycja = wyrazDoSkrocenia.find(przerywnik);
+    pierwszyWyraz = wyrazDoSkrocenia.substr(0, pozycja);
+    wyrazDoSkrocenia = wyrazDoSkrocenia.erase(0,pozycja+1);
+
+    return pierwszyWyraz;
+}
+
+int wczytajOsobyZPLiku(vector <Adresat> &adresaci)
 {
     int id;
     string imie, nazwisko, numerTelefonu, email, adres;
+
+    Adresat osoba;
     fstream plik;
     plik.open("KsiazkaAdresowa.txt", ios::in);
 
     if (plik.good()== false)
     {
         cout << "Plik z ksiazka adresowa jeszcze nie istnieje." << endl;
-        Sleep(3000);
+        Sleep(1000);
         cout << "Aby dodac osobe do ksiazki adresowej wcisnij 1 w menu.";
-        Sleep(4000);
+        Sleep(1000);
         return 0;
     }
 
     string linia;
-    int nrLinii = 1;
-    int iloscOsob =0;
+    int iloscOsob = 0;
 
-    while(getline(plik, linia))
+    while(getline(plik,linia))
     {
-        switch(nrLinii)
-        {
-        case 1:
-            osoby[iloscOsob].id            = atoi(linia.c_str());
-            break;
-        case 2:
-            osoby[iloscOsob].imie          = linia;
-            break;
-        case 3:
-            osoby[iloscOsob].nazwisko      = linia;
-            break;
-        case 4:
-            osoby[iloscOsob].numerTelefonu = linia;
-            break;
-        case 5:
-            osoby[iloscOsob].email         = linia;
-            break;
-        case 6:
-            osoby[iloscOsob].adres         = linia;
-            break;
-        }
+        osoba.id            = atoi(wyodrebnijPierwszyWyraz(linia).c_str());
+        osoba.imie          = wyodrebnijPierwszyWyraz(linia);
+        osoba.nazwisko      = wyodrebnijPierwszyWyraz(linia);
+        osoba.numerTelefonu = wyodrebnijPierwszyWyraz(linia);
+        osoba.email         = wyodrebnijPierwszyWyraz(linia);
+        osoba.adres         = wyodrebnijPierwszyWyraz(linia);
 
-        if (nrLinii == 6)
-        {
-            iloscOsob ++;
-            nrLinii = 0;
-        }
-        nrLinii ++;
+        adresaci.push_back(osoba);
+
+        iloscOsob++;
     }
     plik.close();
     return iloscOsob;
 }
 
-int dodajOsobe(Osoba osoby[], int iloscOsob)
+int dodajOsobe(vector <Adresat> &adresaci, int iloscOsob)
 {
     string imie, nazwisko, numerTelefonu, email, adres;
 
@@ -96,32 +91,33 @@ int dodajOsobe(Osoba osoby[], int iloscOsob)
     cin.sync();
     getline(cin, adres);
 
-    int osobaId = iloscOsob + 1;
+    int AdresatId;
 
-    osoby[iloscOsob].id = osobaId;
-    osoby[iloscOsob].imie = imie;
-    osoby[iloscOsob].nazwisko = nazwisko;
-    osoby[iloscOsob].numerTelefonu = numerTelefonu;
-    osoby[iloscOsob].email = email;
-    osoby[iloscOsob].adres = adres;
+    if(adresaci.size() == 0)
+        AdresatId = 1;
+    else
+    AdresatId = adresaci[adresaci.size()-1].id+1;
+
+    Adresat osoba;
+
+    osoba.id            = AdresatId;
+    osoba.imie          = imie;
+    osoba.nazwisko      = nazwisko;
+    osoba.numerTelefonu = numerTelefonu;
+    osoba.email         = email;
+    osoba.adres         = adres;
+
+    adresaci.push_back(osoba);
 
     fstream plik;
     plik.open("KsiazkaAdresowa.txt", ios::out | ios::app);
     if (plik.good())
     {
-        plik << osobaId << endl;
-        plik << imie << endl;
-        plik << nazwisko << endl;
-        plik << numerTelefonu << endl;
-        plik << email << endl;
-        plik << adres << endl;
-
+        plik << AdresatId << "|" << imie << "|" << nazwisko << "|" << numerTelefonu << "|" << email << "|" << adres << "|" << endl;
         plik.close();
-
-        cout << "Osoba zostala dodana." << endl;
+        cout << "Adresat zostal dodany." << endl;
         Sleep(2000);
     }
-
     else
     {
         cout << "Nie mozna otworzyc pliku: KsiazkaAdresowa.txt" << endl;
@@ -130,22 +126,19 @@ int dodajOsobe(Osoba osoby[], int iloscOsob)
     return iloscOsob;
 }
 
-void wyswietlWszystkieKontakty(Osoba osoby[],int iloscOsob)
+void wyswietlWszystkieKontakty(vector <Adresat> &adresaci,int iloscOsob)
 {
     system("cls");
-
     if (iloscOsob == 0)
-
         cout << "Ksiazka adresowa na razie jest pusta";
 
-    for (int i=0; i<iloscOsob; i++)
+    for (int i=0; i<adresaci.size(); i++)
     {
-        wyswietlDaneOsob(osoby, i);
+        wyswietlDaneOsob(adresaci, i);
     }
-
 }
 
-void  wyszukajWgImienia(Osoba osoby[], int iloscOsob)
+void  wyszukajWgImienia(vector <Adresat> &adresaci, int iloscOsob)
 {
     string wprowadzoneImie;
     int licznik = 0;
@@ -153,21 +146,19 @@ void  wyszukajWgImienia(Osoba osoby[], int iloscOsob)
     cout << "Podaj imie:";
     cin >> wprowadzoneImie;
 
-    for (int i=0; i<iloscOsob; i++)
+    for (int i=0; i<adresaci.size(); i++)
     {
-        if (wprowadzoneImie == osoby[i].imie)
+        if (wprowadzoneImie == adresaci[i].imie)
         {
-            wyswietlDaneOsob(osoby, i);
+            wyswietlDaneOsob(adresaci, i);
             licznik ++;
         }
     }
-
     if (licznik == 0)
-
         cout << "W ksiazce nie ma osoby o takim imieniu";
 }
 
-void wyszukajWgNazwiska (Osoba osoby[], int iloscOsob)
+void wyszukajWgNazwiska (vector <Adresat> &adresaci, int iloscOsob)
 {
     string wprowadzoneNazwisko;
     int licznik = 0;
@@ -175,56 +166,182 @@ void wyszukajWgNazwiska (Osoba osoby[], int iloscOsob)
     cout << "Podaj nazwisko:";
     cin >> wprowadzoneNazwisko;
 
-    for (int i=0; i<iloscOsob; i++)
+    for (int i=0; i<adresaci.size(); i++)
     {
-        if (wprowadzoneNazwisko == osoby[i].nazwisko)
+        if (wprowadzoneNazwisko == adresaci[i].nazwisko)
         {
-            wyswietlDaneOsob(osoby, i);
+            wyswietlDaneOsob(adresaci, i);
             licznik++;
         }
     }
-
     if (licznik == 0)
-
         cout << "W ksiazce nie ma osoby o takim nazwisku";
 }
 
+void zapiszZmianyWKontakcie (vector<Adresat> &adresaci)
+{
+    fstream plik;
+    plik.open("KsiazkaAdresowa.txt", ios::out);
+    if (plik.good())
+    {
+        for(int i=0; i<adresaci.size(); i++)
+        {
+            plik << adresaci[i].id << "|" << adresaci[i].imie << "|" << adresaci[i].nazwisko << "|" << adresaci[i].numerTelefonu << "|" << adresaci[i].email << "|" << adresaci[i].adres << "|" << endl;
+        }
+        plik.close();
+    }
+}
+
+void edytujKontakt (vector<Adresat> &adresaci)
+{
+    system("cls");
+    int podanyNrID, wybor, licznik = 0;
+    string nowaDana;
+    cout << "Podaj nr ID kontaktu:";
+    cin >> podanyNrID;
+
+    for(int i=0; i < adresaci.size(); i++)
+    {
+        if(podanyNrID == adresaci[i].id)
+        {
+            cout << "Wybierz dane do edycji:" << endl;
+            cout << "1. Imie" << endl;
+            cout << "2. Nazwisko" << endl;
+            cout << "3. Numer telefonu" << endl;
+            cout << "4. Email" << endl;
+            cout << "5. Adres" << endl;
+            cout << "6. Powrot do MENU" << endl;
+            cout << "Twoj wybor:";
+            cin >> wybor;
+
+            switch(wybor)
+            {
+            case 1:
+                cout << "Podaj nowe imie:";
+                cin >> nowaDana;
+                adresaci[i].imie = nowaDana;
+                zapiszZmianyWKontakcie(adresaci);
+                break;
+            case 2:
+                cout << "Podaj nowe nazwisko:";
+                cin >> nowaDana;
+                adresaci[i].nazwisko = nowaDana;
+                zapiszZmianyWKontakcie(adresaci);
+                break;
+            case 3:
+                cout << "Podaj nowy numer telefonu:";
+                cin >> nowaDana;
+                adresaci[i].numerTelefonu = nowaDana;
+                zapiszZmianyWKontakcie(adresaci);
+                break;
+            case 4:
+                cout << "Podaj nowy Email:";
+                cin >> nowaDana;
+                adresaci[i].email = nowaDana;
+                zapiszZmianyWKontakcie(adresaci);
+                break;
+            case 5:
+                cout << "Podaj nowe Adres:";
+                cin >> nowaDana;
+                adresaci[i].adres = nowaDana;
+                zapiszZmianyWKontakcie(adresaci);
+                break;
+            case 6:
+                break;
+            }
+            break;
+        }
+        else if (podanyNrID != adresaci[i].id)
+        {
+            licznik++;
+            if(licznik == adresaci.size())
+                cout << "Nie ma w ksiazce adresowej osoby z takim ID";
+        }
+    }
+}
+
+void usunKontakt (vector <Adresat> &adresaci)
+{
+    system ("cls");
+    int podanyNrID, licznik = 0;
+    char znak;
+    cout << "Podaj nr ID kontaktu do usunecia:";
+    cin >> podanyNrID;
+
+    for (auto elem = adresaci.begin(); elem != adresaci.end(); elem++)
+    {
+        if ( elem -> id == podanyNrID)
+        {
+            cout << "Czy na pewno chcesz usunac kontakt?" << endl << "Jezeli tak nacisnij t:";
+            cin >> znak;
+            if (znak == 't')
+            {
+                adresaci.erase(elem);
+                cout << "Kontakt usuniety.";
+                zapiszZmianyWKontakcie(adresaci);
+                break;
+            }
+            else
+                break;
+        }
+        if (elem -> id != podanyNrID)
+        {
+            licznik++;
+            if(licznik == adresaci.size())
+                cout << "Nie ma w ksiazce adresowej osoby z takim ID";
+        }
+    }
+}
 
 int main()
 {
-    Osoba osoby[1000];
+    vector <Adresat> adresaci;
     int iloscOsob = 0;
     char wybor;
 
-    iloscOsob = wczytajOsobyZPLiku(osoby);
+    iloscOsob = wczytajOsobyZPLiku(adresaci);
 
     while (true)
     {
         system("cls");
-        cout << "1. Dodaj osobe" << endl;
-        cout << "2. Wyszukaj wg imienia" << endl;
-        cout << "3. Wyszukaj wg nazwiska" << endl;
-        cout << "4. Wyswietl wszystkie kontakty" << endl;
+        cout << "KSIAZKA ADRESOWA" << endl;
+        cout << "1. Dodaj adresata" << endl;
+        cout << "2. Wyszukaj po imieniu" << endl;
+        cout << "3. Wyszukaj po nazwisku" << endl;
+        cout << "4. Wyswietl wszystkich adresatow" << endl;
+        cout << "5. Edytuj adresata" << endl;
+        cout << "6. Usun adresata" << endl;
         cout << "9. Zakoncz program" << endl;
+        cout << "Twoj wybor:";
         cin >> wybor;
 
         if (wybor == '1')
         {
-            iloscOsob = dodajOsobe(osoby, iloscOsob);
+            iloscOsob = dodajOsobe(adresaci, iloscOsob);
         }
         else if (wybor == '2')
         {
-            wyszukajWgImienia (osoby, iloscOsob);
+            wyszukajWgImienia (adresaci, iloscOsob);
             getch();
         }
         else if (wybor == '3')
         {
-            wyszukajWgNazwiska (osoby, iloscOsob);
+            wyszukajWgNazwiska (adresaci, iloscOsob);
             getch();
         }
         else if (wybor == '4')
         {
-            wyswietlWszystkieKontakty(osoby, iloscOsob);
+            wyswietlWszystkieKontakty(adresaci, iloscOsob);
+            getch();
+        }
+        else if (wybor == '5')
+        {
+            edytujKontakt(adresaci);
+            getch();
+        }
+        else if (wybor == '6')
+        {
+            usunKontakt(adresaci);
             getch();
         }
         else if (wybor == '9')
@@ -232,6 +349,6 @@ int main()
             exit(0);
         }
     }
-
     return 0;
 }
+
